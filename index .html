@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal da Minha Sala</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#165DFF',
+                        secondary: '#36CBCB',
+                    },
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50 font-sans">
+
+    <!-- TELA DE LOGIN -->
+    <div id="loginScreen" class="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary to-secondary p-4">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full">
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-6">Bem-vindo!</h2>
+            <p class="text-center text-gray-500 mb-8">Escolha seu tipo de acesso</p>
+            
+            <div class="space-y-4">
+                <button onclick="login('aluno')" 
+                        class="w-full py-4 bg-blue-50 hover:bg-blue-100 text-primary rounded-xl font-bold transition-all flex items-center justify-center gap-3 border-2 border-primary">
+                    <i class="fas fa-user-graduate text-xl"></i> Acessar como Aluno
+                </button>
+                
+                <button onclick="loginAdmin()" 
+                        class="w-full py-4 bg-gray-50 hover:bg-gray-100 text-gray-700 rounded-xl font-bold transition-all flex items-center justify-center gap-3 border-2 border-gray-300">
+                    <i class="fas fa-user-shield text-xl"></i> Acessar como Administrador
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TELA PRINCIPAL -->
+    <div id="mainScreen" class="hidden">
+        <header class="bg-primary text-white shadow-lg">
+            <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+                <h1 class="text-2xl font-bold">📚 Portal da Sala</h1>
+                <div class="flex items-center gap-3">
+                    <span id="userType" class="bg-white/20 px-3 py-1 rounded-full text-sm font-medium">Aluno</span>
+                    <button onclick="sair()" 
+                            class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition-all">
+                        <i class="fas fa-sign-out-alt"></i> Sair
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <main class="container mx-auto px-4 py-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+                <!-- Contagem Regressiva -->
+                <div class="bg-white rounded-2xl shadow-md p-6 hover:shadow-lg transition-shadow">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="bg-pink-100 p-3 rounded-xl text-pink-600">
+                            <i class="fas fa-stopwatch text-xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-800">Contagem Regressiva</h3>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-gray-500 text-sm mb-2">Faltam para o final do ano:</p>
+                        <div id="contagem" class="text-4xl font-bold text-primary"></div>
+                    </div>
+                </div>
+
+                <!-- Horário de Aula -->
+                <div class="bg-white rounded-2xl shadow-md p-6 hover:shadow-lg transition-shadow">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="bg-blue-100 p-3 rounded-xl text-primary">
+                            <i class="fas fa-calendar-alt text-xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-800">Horário de Aula</h3>
+                    </div>
+                    <div id="horarioContent" class="space-y-2 text-gray-600 min-h-[100px]"></div>
+                    <textarea id="horarioInput" class="w-full mt-4 p-3 border rounded-lg bg-gray-50 hidden" rows="4" placeholder="Digite o horário aqui..."></textarea>
+                    <button onclick="editarCampo('horario')" id="btnHorario" class="mt-4 text-primary font-medium hidden">
+                        <i class="fas fa-edit"></i> Editar
+                    </button>
+                </div>
+
+                <!-- Calendário Escolar -->
+                <div class="bg-white rounded-2xl shadow-md p-6 hover:shadow-lg transition-shadow">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="bg-green-100 p-3 rounded-xl text-green-600">
+                            <i class="fas fa-calendar-check text-xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-800">Calendário Escolar</h3>
+                    </div>
+                    <div id="calendarioContent" class="space-y-2 text-gray-600">
+                        <img id="imgCalendario" src="" alt="Calendário Escolar" class="w-full rounded-lg hidden">
+                    </div>
+                    <textarea id="calendarioInput" class="w-full mt-4 p-3 border rounded-lg bg-gray-50 hidden" rows="3" placeholder="Cole o link da imagem ou digite texto..."></textarea>
+                    <button onclick="editarCampo('calendario')" id="btnCalendario" class="mt-4 text-primary font-medium hidden">
+                        <i class="fas fa-edit"></i> Editar
+                    </button>
+                </div>
+
+                <!-- Dever de Casa -->
+                <div class="bg-white rounded-2xl shadow-md p-6 hover:shadow-lg transition-shadow">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="bg-yellow-100 p-3 rounded-xl text-yellow-600">
+                            <i class="fas fa-book text-xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-800">Dever de Casa</h3>
+                    </div>
+                    <div id="deverContent" class="space-y-2 text-gray-600 min-h-[100px]"></div>
+                    <textarea id="deverInput" class="w-full mt-4 p-3 border rounded-lg bg-gray-50 hidden" rows="4" placeholder="O que tem para fazer?"></textarea>
+                    <button onclick="editarCampo('dever')" id="btnDever" class="mt-4 text-primary font-medium hidden">
+                        <i class="fas fa-edit"></i> Editar
+                    </button>
+                </div>
+
+                <!-- Materiais / Apostilas -->
+                <div class="bg-white rounded-2xl shadow-md p-6 hover:shadow-lg transition-shadow">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="bg-indigo-100 p-3 rounded-xl text-indigo-600">
+                            <i class="fas fa-file-download text-xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-800">Materiais / Apostilas</h3>
+                    </div>
+                    <div id="materiaisContent" class="space-y-2 text-gray-600 min-h-[100px]"></div>
+                    <textarea id="materiaisInput" class="w-full mt-4 p-3 border rounded-lg bg-gray-50 hidden" rows="4" placeholder="Cole links ou nomes dos arquivos..."></textarea>
+                    <button onclick="editarCampo('materiais')" id="btnMateriais" class="mt-4 text-primary font-medium hidden">
+                        <i class="fas fa-edit"></i> Editar
+                    </button>
+                </div>
+
+                <!-- Professores Ausentes -->
+                <div class="bg-white rounded-2xl shadow-md p-6 hover:shadow-lg transition-shadow">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="bg-orange-100 p-3 rounded-xl text-orange-600">
+                            <i class="fas fa-user-times text-xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-800">Professores Ausentes</h3>
+                    </div>
+                    <div id="ausentesContent" class="space-y-2 text-gray-600 min-h-[100px]"></div>
+                    <textarea id="ausentesInput" class="w-full mt-4 p-3 border rounded-lg bg-gray-50 hidden" rows="4" placeholder="Quem vai faltar hoje?"></textarea>
+                    <button onclick="editarCampo('ausentes')" id="btnAusentes" class="mt-4 text-primary font-medium hidden">
+                        <i class="fas fa-edit"></i> Editar
+                    </button>
+                </div>
+
+                <!-- Dias de Prova -->
+                <div class="bg-white rounded-2xl shadow-md p-6 hover:shadow-lg transition-shadow">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="bg-red-100 p-3 rounded-xl text-red-600">
+                            <i class="fas fa-file-alt text-xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-800">Dias de Prova</h3>
+                    </div>
+                    <div id="provasContent" class="space-y-2 text-gray-600 min-h-[100px]"></div>
+                    <textarea id="provasInput" class="w-full mt-4 p-3 border rounded-lg bg-gray-50 hidden" rows="4" placeholder="Liste as provas e datas..."></textarea>
+                    <button onclick="editarCampo('provas')" id="btnProvas" class="mt-4 text-primary font-medium hidden">
+                        <i class="fas fa-edit"></i> Editar
+                    </button>
+                </div>
+
+                <!-- Interclasse -->
+                <div class="bg-white rounded-2xl shadow-md p-6 hover:shadow-lg transition-shadow">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="bg-purple-100 p-3 rounded-xl text-purple-600">
+                            <i class="fas fa-futbol text-xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-800">Interclasse</h3>
+                    </div>
+                    <div id="interclasseContent" class="space-y-2 text-gray-600 min-h-[100px]"></div>
+                    <textarea id="interclasseInput" class="w-full mt-4 p-3 border rounded-lg bg-gray-50 hidden" rows="4" placeholder="Informações sobre os jogos..."></textarea>
+                    <button onclick="editarCampo('interclasse')" id="btnInterclasse" class="mt-4 text-primary font-medium hidden">
+                        <i class="fas fa-edit"></i> Editar
+                    </button>
+                </div>
+
+                <!-- Notas -->
+                <div class="bg-white rounded-2xl shadow-md p-6 hover:shadow-lg transition-shadow">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="bg-indigo-100 p-3 rounded-xl text-indigo-600">
+                            <i class="fas fa-graduation-cap text-xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-800">Notas da Turma</h3>
+                    </div>
+                    <div id="notasContent" class="space-y-2 text-gray-600 min-h-[100px]"></div>
+                    <textarea id="notasInput" class="w-full mt-4 p-3 border rounded-lg bg-gray-50 hidden" rows="4" placeholder="Nome: Nota"></textarea>
+                    <button onclick="editarCampo('notas')" id="btnNotas" class="mt-4 text-primary font-medium hidden">
+                        <i class="fas fa-edit"></i> Editar
+                    </button>
+                </div>
+
+                <!-- Anotações Gerais -->
+                <div class="bg-white rounded-2xl shadow-md p-6 hover:shadow-lg transition-shadow lg:col-span-3">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="bg-yellow-100 p-3 rounded-xl text-yellow-600">
+                            <i class="fas fa-sticky-note text-xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-800">Anotações Gerais</h3>
+                    </div>
+                    <div id="anotacoesContent" class="prose max-w-none text-gray-600 min-h-[120px]"></div>
+                    <textarea id="anotacoesInput" class="w-full mt-4 p-3 border rounded-lg bg-gray-50 hidden" rows="6" placeholder="Escreva aqui avisos importantes..."></textarea>
+                    <button onclick="editarCampo('anotacoes')" id="btnAnotacoes" class="mt-4 text-primary font-medium hidden">
+                        <i class="fas fa-edit"></i> Editar
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // ==================== CONFIGURAÇÕES ====================
+        const SENHA_ADMIN = "representante123"; 
+        let usuarioAtual = "aluno";
+
+        // ==================== CONTAGEM REGRESSIVA ====================
+        function atualizarContagem() {
+            const dataFinal = new Date("December 20, 2026 23:59:59").getTime();
+            const agora = new Date().getTime();
+            const diferenca = dataFinal - agora;
+            const dias = Math.ceil(diferenca / (1000 * 60 * 60 * 24));
+            
+            document.getElementById("contagem").innerHTML = 
+                dias > 0 ? `${dias} dias` : "Chegou ao fim!";
+        }
+
+        // ==================== LOCALSTORAGE ====================
+        function salvarNoLocalStorage(campo, valor) {
+            localStorage.setItem('portal_' + campo, valor);
+        }
+
+        function carregarDados() {
+            const campos = ['horario', 'dever', 'materiais', 'ausentes', 'provas', 'interclasse', 'notas', 'anotacoes', 'calendario'];
+            
+            campos.forEach(campo => {
+                const valorSalvo = localStorage.getItem('portal_' + campo);
+                if (!valorSalvo) return;
+
+                const content = document.getElementById(campo + 'Content');
+                const input = document.getElementById(campo + 'Input');
+
+                if (campo === 'calendario' && 
+                    (valorSalvo.startsWith('http') || valorSalvo.match(/\.(jpg|png|jpeg|gif|webp)/i))) {
+                    document.getElementById('imgCalendario').src = valorSalvo;
+                    document.getElementById('imgCalendario').classList.remove('hidden');
+                } else {
+                    content.innerHTML = valorSalvo.replace(/\n/g, '<br>');
+                }
+            });
+        }
+
+        // ==================== LOGIN ====================
+        function login(tipo) {
+            usuarioAtual = tipo;
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('mainScreen').classList.remove('hidden');
+            document.getElementById('userType').innerText = tipo === 'admin' ? 'Administrador' : 'Aluno';
+            
+            if (tipo === 'admin') {
+                document.querySelectorAll('[id^="btn"]').forEach(btn => btn.classList.remove('hidden'));
+            }
+            
+            carregarDados();
+        }
+
+        function loginAdmin() {
+            const senha = prompt("Digite a senha de Administrador:");
+            if (senha === SENHA_ADMIN) {
+                login('admin');
+            } else {
+                alert("Senha incorreta!");
+            }
+        }
+
+        function sair() {
+            document.getElementById('mainScreen').classList.add('hidden');
+            document.getElementById('loginScreen').classList.remove('hidden');
+            usuarioAtual = "aluno";
+        }
+
+        // ==================== EDIÇÃO ====================
+        function editarCampo(campo) {
+            const content = document.getElementById(campo + 'Content');
+            const input = document.getElementById(campo + 'Input');
+            const btn = document.getElementById('btn' + campo.charAt(0).toUpperCase() + campo.slice(1));
+
+            input.value = content.innerText || content.textContent || '';
+            content.classList.add('hidden');
+            input.classList.remove('hidden');
+            
+            if (btn) {
+                btn.innerHTML = '<i class="fas fa-save"></i> Salvar';
+                btn.onclick = () => salvarCampo(campo);
+            }
+        }
+
+        function salvarCampo(campo) {
+            const content = document.getElementById(campo + 'Content');
+            const input = document.getElementById(campo + 'Input');
+            const btn = document.getElementById('btn' + campo.charAt(0).toUpperCase() + campo.slice(1));
+
+            const valor = input.value.trim();
+
+            if (campo === 'calendario' && 
+                (valor.startsWith('http') || valor.match(/\.(jpg|png|jpeg|gif|webp)/i))) {
+                
+                document.getElementById('imgCalendario').src = valor;
+                document.getElementById('imgCalendario').classList.remove('hidden');
+                content.innerHTML = '';
+            } 
+            else if (valor !== "") {
+                content.innerHTML = valor.replace(/\n/g, '<br>');
+            } else {
+                content.innerHTML = '';
+            }
+
+            // Volta ao modo de visualização
+            content.classList.remove('hidden');
+            input.classList.add('hidden');
+            
+            if (btn) {
+                btn.innerHTML = '<i class="fas fa-edit"></i> Editar';
+                btn.onclick = () => editarCampo(campo);
+            }
+
+            salvarNoLocalStorage(campo, valor);
+        }
+
+        // ==================== INICIALIZAÇÃO ====================
+        atualizarContagem();
+        setInterval(atualizarContagem, 86400000); // Atualiza a cada 24h
+    </script>
+</body>
+</html>
