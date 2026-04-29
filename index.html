@@ -4,179 +4,204 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Portal 901 | Digital Hub</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="icone.png">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+    
     <style>
-        /* Livrinho Pulando Clássico */
-        .animate-bounce-slow { animation: bounce 2s infinite; }
-        @keyframes bounce {
-            0%, 100% { transform: translateY(-15%); }
-            50% { transform: none; }
-        }
+        body { background-color: #0f172a; color: #ffffff; font-family: system-ui, sans-serif; margin: 0; }
 
-        /* EFEITO GLOW 3D PREMIUM */
+        /* EFEITO GLOW NAS BORDAS */
         .card-glow {
-            background: #ffffff;
+            background-color: #1e293b;
             border-radius: 2.5rem;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            border: 1px solid rgba(59, 130, 246, 0.3);
-            box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.3), 0 0 15px rgba(59, 130, 246, 0.1);
-            position: relative;
-            overflow: hidden;
+            border: 2px solid #3b82f6;
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
+            transition: all 0.3s ease;
         }
 
         .card-glow:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 20px 40px -10px rgba(59, 130, 246, 0.5), 0 0 25px rgba(59, 130, 246, 0.2);
+            box-shadow: 0 0 35px rgba(59, 130, 246, 0.6);
+            transform: translateY(-5px);
         }
 
-        /* MODO ESCURO AUTOMÁTICO */
-        @media (prefers-color-scheme: dark) {
-            body { background-color: #0f172a !important; }
-            .card-glow { 
-                background: #1e293b !important; 
-                border-color: #3b82f6 !important;
-                box-shadow: 0 0 25px rgba(59, 130, 246, 0.4) !important;
-                color: white !important;
-            }
-            .text-slate-800, .text-slate-600 { color: #f1f5f9 !important; }
-            nav { background: #1e293b !important; color: white !important; border-bottom: 1px solid #334155 !important; }
+        /* BANNER DE INSTALAÇÃO NO TOPO */
+        #pwa-banner {
+            position: fixed; top: 15px; left: 50%; transform: translateX(-50%);
+            width: 90%; max-width: 480px; z-index: 9999;
+            background-color: rgba(30, 41, 59, 0.95); backdrop-filter: blur(12px);
+            padding: 16px; border-radius: 24px; display: flex; align-items: center;
+            justify-content: space-between; gap: 15px; border: 1px solid #3b82f6;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
         }
 
-        /* Animação de subida dos cards */
-        .fade-up { animation: fadeUp 0.6s ease forwards; opacity: 0; }
-        @keyframes fadeUp {
-            from { transform: translateY(30px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
+        .modal-overlay {
+            position: fixed; inset: 0; background-color: rgba(0, 0, 0, 0.9);
+            z-index: 10000; display: none; align-items: center; justify-content: center; padding: 20px;
         }
+
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 15px rgba(59, 130, 246, 0.4); }
+            50% { box-shadow: 0 0 30px rgba(59, 130, 246, 0.7); }
+        }
+        .animate-glow { animation: pulse-glow 3s infinite; }
     </style>
 </head>
-<body class="bg-[#f8fafc] font-sans">
+<body>
 
-    <div id="loginScreen" class="min-h-screen flex items-center justify-center bg-blue-600 p-6">
+    <div id="pwa-banner" class="hidden">
+        <div class="flex items-center gap-4">
+            <div class="bg-blue-600 h-12 w-12 rounded-2xl flex items-center justify-center animate-glow">
+                <i class="fas fa-book-open text-white"></i>
+            </div>
+            <div>
+                <p class="text-sm font-bold text-white">Portal 901 no Celular</p>
+                <button onclick="document.getElementById('modal-ajuda').style.display='flex'" class="text-xs text-blue-400 font-black uppercase underline">Como Instalar?</button>
+            </div>
+        </div>
+        <button onclick="fecharBannerPWA()" class="text-slate-400 p-2"><i class="fas fa-times"></i></button>
+    </div>
+
+    <div id="modal-ajuda" class="modal-overlay" onclick="this.style.display='none'">
+        <div class="card-glow p-10 max-w-sm w-full text-center" onclick="event.stopPropagation()">
+            <h3 class="text-2xl font-black mb-6 uppercase italic">Passo a Passo</h3>
+            <div class="text-left space-y-4 text-slate-300">
+                <p>1. Clique no botão <b>Compartilhar</b> ou nos <b>três pontinhos</b>.</p>
+                <p>2. Clique em <b>"Adicionar à Tela de Início"</b>.</p>
+                <p>3. Pronto! O Portal 901 virou um App.</p>
+            </div>
+            <button onclick="document.getElementById('modal-ajuda').style.display='none'" class="mt-8 w-full py-5 bg-blue-600 text-white rounded-3xl font-black">ENTENDI!</button>
+        </div>
+    </div>
+
+    <div id="loginScreen" class="min-h-screen flex items-center justify-center p-6 bg-slate-950">
         <div class="card-glow p-12 w-full max-w-sm text-center">
-            <div class="text-blue-600 text-7xl mb-6 animate-bounce-slow">
-                <i class="fas fa-book-open"></i>
-            </div>
-            <h2 class="text-3xl font-black mb-10 uppercase text-slate-800">Portal 901</h2>
-            <div class="space-y-4">
-                <button onclick="entrar('aluno')" class="w-full py-5 bg-blue-600 text-white rounded-2xl font-bold text-lg shadow-lg active:scale-95 transition">Acesso do Aluno</button>
-                <button onclick="entrarAdmin()" class="w-full py-3 text-slate-400 font-bold text-xs uppercase tracking-widest hover:text-blue-500 transition">Acesso do Administrador</button>
-            </div>
+            <i class="fas fa-book-open text-blue-500 text-8xl mb-8"></i>
+            <h2 class="text-4xl font-black mb-12 uppercase italic tracking-tighter text-white">Portal 901</h2>
+            <button onclick="fazerLogin('aluno')" class="w-full py-6 bg-blue-600 text-white rounded-[2rem] font-black text-xl mb-4 animate-glow">Acesso Aluno</button>
+            <button onclick="pedirSenhaAdmin()" class="w-full py-3 text-slate-500 font-bold text-xs uppercase tracking-widest">Área Admin</button>
         </div>
     </div>
 
     <div id="mainScreen" class="hidden min-h-screen">
-        <nav class="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b p-5 flex justify-between items-center shadow-sm">
-            <div class="flex items-center gap-3">
-                <span class="bg-blue-600 text-white px-3 py-1 rounded-lg font-black shadow-md">901</span>
-                <h1 class="text-xl font-bold uppercase italic tracking-tight">Mural Digital</h1>
+        <nav class="sticky top-0 z-50 bg-slate-900/90 backdrop-blur-xl border-b border-blue-900/50 p-6 flex justify-between items-center">
+            <div class="flex items-center gap-4">
+                <span class="bg-blue-600 text-white px-3 py-1 rounded-lg font-black">901</span>
+                <h1 class="text-2xl font-black uppercase italic">Mural Digital</h1>
             </div>
-            <button onclick="location.reload()" class="h-10 w-10 flex items-center justify-center bg-red-50 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition"><i class="fas fa-power-off"></i></button>
+            <button onclick="location.reload()" class="h-12 w-12 text-red-500 border border-red-500/30 rounded-2xl"><i class="fas fa-power-off"></i></button>
         </nav>
 
-        <header class="p-6" id="headerBanner">
-            <div id="notif-banner" onclick="ativarNotificacoes()" class="bg-gradient-to-r from-blue-600 to-indigo-700 p-5 rounded-[2rem] flex items-center justify-between cursor-pointer shadow-xl transform active:scale-95 transition-all">
-                <div class="flex items-center gap-4 text-white text-left">
-                    <div class="bg-white/20 p-3 rounded-full"><i class="fas fa-bell animate-pulse text-xl"></i></div>
-                    <div>
-                        <p class="font-bold text-base tracking-tight">Ficar por dentro de tudo?</p>
-                        <p class="text-xs opacity-80">Clique aqui para ativar as notificações.</p>
-                    </div>
-                </div>
-                <i class="fas fa-arrow-right text-white/50 mr-2"></i>
-            </div>
-        </header>
+        <div id="container-admin-add" class="hidden px-6 pt-10 max-w-6xl mx-auto w-full">
+            <button onclick="criarNovaCategoria()" class="w-full py-6 bg-green-600/10 border-2 border-dashed border-green-500 text-green-500 rounded-[2.5rem] font-black uppercase flex items-center justify-center gap-3">
+                <i class="fas fa-plus-circle text-xl"></i> ADICIONAR NOVO BLOCO
+            </button>
+        </div>
 
-        <main class="container mx-auto px-6 pb-24 grid grid-cols-1 md:grid-cols-2 gap-8" id="mural"></main>
+        <main class="container mx-auto px-6 py-10 grid grid-cols-1 md:grid-cols-2 gap-10 max-w-6xl" id="mural-container"></main>
     </div>
 
     <script>
         const firebaseConfig = { databaseURL: "https://project-646369015746153540-default-rtdb.firebaseio.com" };
         firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
-        const SENHA_ADMIN = "esquilo";
+        const database = firebase.database();
+        let usuarioEhAdmin = false;
 
-        const categorias = [
-            {id: 'horario', nome: 'Horário de Aula', icon: 'fa-calendar-day'},
-            {id: 'dever', nome: 'Dever de Casa', icon: 'fa-pencil-alt'},
-            {id: 'provas', nome: 'Datas de Provas', icon: 'fa-triangle-exclamation'},
-            {id: 'avisos', nome: 'Recados Gerais', icon: 'fa-bullhorn'}
-        ];
+        // BLOCOS FIXOS QUE VOCÊ PEDIU
+        const blocosFixos = {
+            'horario': { nome: 'Horário de Aula', icon: 'fa-clock' },
+            'provas': { nome: 'Data de Prova', icon: 'fa-file-signature' },
+            'avisos': { nome: 'Avisos Importantes', icon: 'fa-triangle-exclamation' },
+            'deveres': { nome: 'Deveres de Casa', icon: 'fa-book' },
+            'professores': { nome: 'Professores', icon: 'fa-user-tie' }
+        };
 
-        function renderMural() {
-            const mural = document.getElementById('mural');
-            mural.innerHTML = '';
-            categorias.forEach((cat, index) => {
-                mural.innerHTML += `
-                    <div class="card-glow p-8 fade-up" style="animation-delay: ${index * 0.1}s">
-                        <div class="flex items-center gap-4 mb-6">
-                            <div class="w-14 h-14 bg-blue-50 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center text-blue-600">
-                                <i class="fas ${cat.icon} text-2xl"></i>
+        function fazerLogin(tipo) {
+            usuarioEhAdmin = (tipo === 'admin');
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('mainScreen').classList.remove('hidden');
+            if(usuarioEhAdmin) document.getElementById('container-admin-add').classList.remove('hidden');
+            if (!localStorage.getItem('pwa_visto_901')) document.getElementById('pwa-banner').classList.remove('hidden');
+            carregarMural();
+        }
+
+        function pedirSenhaAdmin() {
+            if (prompt("Senha do Admin:") === "esquilo") fazerLogin('admin');
+        }
+
+        function carregarMural() {
+            database.ref('categorias').on('value', function(snapshot) {
+                let categoriasExtras = snapshot.val() || {};
+                
+                // Unir os blocos fixos com os que você criar no (+)
+                const todasCategorias = { ...blocosFixos, ...categoriasExtras };
+
+                const muralHtml = document.getElementById('mural-container');
+                muralHtml.innerHTML = '';
+
+                Object.keys(todasCategorias).forEach(function(chave) {
+                    const cat = todasCategorias[chave];
+                    const ehFixo = blocosFixos[chave] ? true : false;
+
+                    muralHtml.innerHTML += `
+                        <div class="card-glow p-8 relative">
+                            ${usuarioEhAdmin && !ehFixo ? `<button onclick="deletarCategoria('${chave}')" class="absolute top-6 right-6 text-red-500/40"><i class="fas fa-trash"></i></button>` : ''}
+                            <div class="flex items-center gap-4 mb-6">
+                                <i class="fas ${cat.icon} text-2xl text-blue-400"></i>
+                                <h3 class="font-black uppercase tracking-widest">${cat.nome}</h3>
                             </div>
-                            <h3 class="font-black uppercase text-sm tracking-widest">${cat.nome}</h3>
-                        </div>
-                        <div id="${cat.id}Texto" class="text-slate-700 dark:text-slate-300 font-medium whitespace-pre-wrap leading-relaxed border-t border-blue-100 dark:border-slate-700 pt-5 text-lg">Sincronizando...</div>
-                        <div id="admin-${cat.id}" class="hidden mt-6 space-y-4">
-                            <textarea id="${cat.id}Input" class="w-full p-5 rounded-2xl bg-slate-50 dark:bg-slate-900/50 border-2 border-blue-100 dark:border-blue-900 h-44 outline-none focus:border-blue-500 transition text-slate-800 dark:text-white"></textarea>
-                            <button onclick="salvar('${cat.id}')" class="w-full py-4 bg-blue-600 text-white rounded-xl font-bold uppercase text-xs shadow-lg active:bg-blue-700 transition">Salvar Mudanças</button>
-                        </div>
-                    </div>`;
+                            <div id="texto-${chave}" class="text-slate-300 border-t border-white/5 pt-6 text-xl min-h-[80px] whitespace-pre-wrap">Carregando...</div>
+                            <div id="editor-${chave}" class="${usuarioEhAdmin ? 'block' : 'hidden'} mt-6">
+                                <textarea id="input-${chave}" class="w-full p-4 rounded-2xl bg-slate-900 border border-blue-500/20 text-white h-32 outline-none mb-2 focus:border-blue-500"></textarea>
+                                <button onclick="salvarAlteracao('${chave}')" class="w-full py-4 bg-blue-600 rounded-xl font-black uppercase text-xs">Atualizar</button>
+                            </div>
+                        </div>`;
 
-                db.ref('sala/' + cat.id).on('value', snap => {
-                    const val = snap.val() || "Nada postado ainda.";
-                    if(document.getElementById(cat.id + 'Texto')) {
-                        document.getElementById(cat.id + 'Texto').innerText = val;
-                        document.getElementById(cat.id + 'Input').value = (val === "Nada postado ainda.") ? "" : val;
-                    }
+                    database.ref('sala/' + chave).on('value', function(snapTexto) {
+                        const txt = snapTexto.val() || "Vazio.";
+                        if(document.getElementById('texto-' + chave)) document.getElementById('texto-' + chave).innerText = txt;
+                        if(usuarioEhAdmin && document.getElementById('input-' + chave)) document.getElementById('input-' + chave).value = txt;
+                    });
                 });
             });
         }
 
-        function entrar(tipo) {
-            document.getElementById('loginScreen').style.display = 'none';
-            document.getElementById('mainScreen').classList.remove('hidden');
-            renderMural();
-            // Verifica se já aceitou notificações antes para esconder o banner
-            if (localStorage.getItem('notifAceita') === 'true') {
-                document.getElementById('headerBanner').style.display = 'none';
-            }
-            if(tipo === 'admin') {
-                setTimeout(() => {
-                    document.querySelectorAll('[id^="admin-"]').forEach(el => el.classList.remove('hidden'));
-                    document.querySelectorAll('[id$="Texto"]').forEach(el => el.classList.add('hidden'));
-                }, 200);
+        function criarNovaCategoria() {
+            const nome = prompt("Nome do novo bloco:");
+            if (nome) {
+                const id = 'custom-' + nome.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '-');
+                database.ref('categorias/' + id).set({ nome: nome, icon: 'fa-star' });
+                database.ref('sala/' + id).set("Edite aqui.");
             }
         }
 
-        function entrarAdmin() {
-            if(prompt("Senha do Administrador:") === SENHA_ADMIN) entrar('admin');
-            else alert("Senha Incorreta!");
+        function deletarCategoria(id) {
+            if (confirm("Apagar este bloco?")) {
+                database.ref('categorias/' + id).remove();
+                database.ref('sala/' + id).remove();
+            }
         }
 
-        function salvar(id) {
-            const val = document.getElementById(id + 'Input').value;
-            db.ref('sala/' + id).set(val).then(() => {
-                alert("Mural atualizado!");
-            });
+        function salvarAlteracao(id) {
+            const val = document.getElementById('input-' + id).value;
+            database.ref('sala/' + id).set(val).then(() => alert("Atualizado!"));
         }
 
-        function ativarNotificacoes() {
-            Notification.requestPermission().then(perm => {
-                if(perm === 'granted') {
-                    alert("Avisos ativados com sucesso!");
-                }
-                // Independente da escolha, some com o banner e salva a decisão
-                document.getElementById('headerBanner').style.display = 'none';
-                localStorage.setItem('notifAceita', 'true');
-            });
+        function fecharBannerPWA() {
+            document.getElementById('pwa-banner').style.display = 'none';
+            localStorage.setItem('pwa_visto_901', 'true');
         }
 
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js');
-        }
+        if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }
     </script>
 </body>
 </html>
+            
