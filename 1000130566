@@ -1,0 +1,17 @@
+{
+  "name": "Portal 901 Digital",
+  "short_name": "Portal 901",
+  "description": "Mural de Informações da Turma 901",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#3b82f6",
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
