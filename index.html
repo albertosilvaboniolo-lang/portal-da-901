@@ -8,7 +8,7 @@
     <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="apple-touch-icon" href="icone.png">
+    <link rel="apple-touch-icon" href="icon.png">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -18,29 +18,19 @@
     
     <style>
         body { background-color: #0f172a; color: #ffffff; font-family: system-ui, sans-serif; margin: 0; }
-
-        /* EFEITO GLOW NAS BORDAS */
         .card-glow {
-            background-color: #1e293b;
-            border-radius: 2.5rem;
-            border: 2px solid #3b82f6;
-            box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
-            transition: all 0.3s ease;
+            background-color: #1e293b; border-radius: 2.5rem; border: 2px solid #3b82f6;
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.4); transition: all 0.3s ease;
         }
-
-        .card-glow:hover {
-            box-shadow: 0 0 35px rgba(59, 130, 246, 0.6);
-            transform: translateY(-5px);
-        }
-
-        /* BANNER DE INSTALAÇÃO NO TOPO */
+        .card-glow:hover { box-shadow: 0 0 35px rgba(59, 130, 246, 0.6); transform: translateY(-5px); }
+        
+        /* BANNER PWA */
         #pwa-banner {
             position: fixed; top: 15px; left: 50%; transform: translateX(-50%);
             width: 90%; max-width: 480px; z-index: 9999;
             background-color: rgba(30, 41, 59, 0.95); backdrop-filter: blur(12px);
             padding: 16px; border-radius: 24px; display: flex; align-items: center;
             justify-content: space-between; gap: 15px; border: 1px solid #3b82f6;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
         }
 
         .modal-overlay {
@@ -48,6 +38,7 @@
             z-index: 10000; display: none; align-items: center; justify-content: center; padding: 20px;
         }
 
+        /* ANIMAÇÃO DE PULSAR (GLOW) */
         @keyframes pulse-glow {
             0%, 100% { box-shadow: 0 0 15px rgba(59, 130, 246, 0.4); }
             50% { box-shadow: 0 0 30px rgba(59, 130, 246, 0.7); }
@@ -84,7 +75,7 @@
 
     <div id="loginScreen" class="min-h-screen flex items-center justify-center p-6 bg-slate-950">
         <div class="card-glow p-12 w-full max-w-sm text-center">
-            <i class="fas fa-book-open text-blue-500 text-8xl mb-8"></i>
+            <i class="fas fa-book-open text-blue-500 text-8xl mb-8 animate-bounce"></i>
             <h2 class="text-4xl font-black mb-12 uppercase italic tracking-tighter text-white">Portal 901</h2>
             <button onclick="fazerLogin('aluno')" class="w-full py-6 bg-blue-600 text-white rounded-[2rem] font-black text-xl mb-4 animate-glow">Acesso Aluno</button>
             <button onclick="pedirSenhaAdmin()" class="w-full py-3 text-slate-500 font-bold text-xs uppercase tracking-widest">Área Admin</button>
@@ -94,6 +85,7 @@
     <div id="mainScreen" class="hidden min-h-screen">
         <nav class="sticky top-0 z-50 bg-slate-900/90 backdrop-blur-xl border-b border-blue-900/50 p-6 flex justify-between items-center">
             <div class="flex items-center gap-4">
+                <div id="status-conexao" class="w-3 h-3 rounded-full bg-green-500 shadow-[0_0_10px_#22c55e]"></div>
                 <span class="bg-blue-600 text-white px-3 py-1 rounded-lg font-black">901</span>
                 <h1 class="text-2xl font-black uppercase italic">Mural Digital</h1>
             </div>
@@ -110,12 +102,33 @@
     </div>
 
     <script>
+        // FIREBASE CONFIG
         const firebaseConfig = { databaseURL: "https://project-646369015746153540-default-rtdb.firebaseio.com" };
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
         let usuarioEhAdmin = false;
 
-        // BLOCOS FIXOS QUE VOCÊ PEDIU
+        // REGISTRO DO SW E NOTIFICAÇÃO
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').then(reg => {
+                console.log('SW ativo');
+                // Pede permissão para notificações
+                if (Notification.permission === "default") {
+                    Notification.requestPermission();
+                }
+            });
+        }
+
+        // MONITOR DE STATUS
+        database.ref(".info/connected").on("value", (snap) => {
+            const statusDot = document.getElementById('status-conexao');
+            if (snap.val() === true) {
+                if(statusDot) statusDot.className = "w-3 h-3 rounded-full bg-green-500 shadow-[0_0_10px_#22c55e]";
+            } else {
+                if(statusDot) statusDot.className = "w-3 h-3 rounded-full bg-red-500 shadow-[0_0_10px_#ef4444]";
+            }
+        });
+
         const blocosFixos = {
             'horario': { nome: 'Horário de Aula', icon: 'fa-clock' },
             'provas': { nome: 'Data de Prova', icon: 'fa-file-signature' },
@@ -140,19 +153,16 @@
         function carregarMural() {
             database.ref('categorias').on('value', function(snapshot) {
                 let categoriasExtras = snapshot.val() || {};
-                
-                // Unir os blocos fixos com os que você criar no (+)
                 const todasCategorias = { ...blocosFixos, ...categoriasExtras };
-
                 const muralHtml = document.getElementById('mural-container');
                 muralHtml.innerHTML = '';
 
                 Object.keys(todasCategorias).forEach(function(chave) {
                     const cat = todasCategorias[chave];
-                    const ehFixo = blocosFixos[chave] ? true : false;
+                    const ehFixo = !!blocosFixos[chave];
 
                     muralHtml.innerHTML += `
-                        <div class="card-glow p-8 relative">
+                        <div id="card-${chave}" class="card-glow p-8 relative">
                             ${usuarioEhAdmin && !ehFixo ? `<button onclick="deletarCategoria('${chave}')" class="absolute top-6 right-6 text-red-500/40"><i class="fas fa-trash"></i></button>` : ''}
                             <div class="flex items-center gap-4 mb-6">
                                 <i class="fas ${cat.icon} text-2xl text-blue-400"></i>
@@ -174,10 +184,15 @@
             });
         }
 
+        function salvarAlteracao(id) {
+            const val = document.getElementById('input-' + id).value;
+            database.ref('sala/' + id).set(val).then(() => alert("Atualizado!"));
+        }
+
         function criarNovaCategoria() {
             const nome = prompt("Nome do novo bloco:");
             if (nome) {
-                const id = 'custom-' + nome.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '-');
+                const id = 'custom-' + Date.now();
                 database.ref('categorias/' + id).set({ nome: nome, icon: 'fa-star' });
                 database.ref('sala/' + id).set("Edite aqui.");
             }
@@ -190,18 +205,10 @@
             }
         }
 
-        function salvarAlteracao(id) {
-            const val = document.getElementById('input-' + id).value;
-            database.ref('sala/' + id).set(val).then(() => alert("Atualizado!"));
-        }
-
         function fecharBannerPWA() {
             document.getElementById('pwa-banner').style.display = 'none';
             localStorage.setItem('pwa_visto_901', 'true');
         }
-
-        if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }
     </script>
 </body>
 </html>
-            
