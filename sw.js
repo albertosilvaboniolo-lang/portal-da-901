@@ -6,36 +6,38 @@ const ASSETS_TO_CACHE = [
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css'
 ];
 
-// Instalação do Service Worker e Cache dos arquivos essenciais
+// Instalação e Cache
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      console.log('Cache aberto com sucesso!');
-      return cache.addAll(ASSETS_TO_CACHE);
-    })
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS_TO_CACHE))
   );
 });
 
-// Ativação e limpeza de caches antigos
-self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    })
-  );
-});
-
-// Estratégia de busca: Tenta rede primeiro, se falhar, usa o cache
+// Busca na rede ou cache
 self.addEventListener('fetch', (event) => {
   event.respondWith(
-    fetch(event.request).catch(() => {
-      return caches.match(event.request);
-    })
+    fetch(event.request).catch(() => caches.match(event.request))
   );
 });
+
+// ESCUTADOR DE NOTIFICAÇÕES PUSH
+self.addEventListener('push', function(event) {
+  const options = {
+    body: 'O Mural da 901 foi atualizado! Toque para ver.',
+    icon: 'icon.png', // Nome exato do arquivo na sua imagem
+    badge: 'icon.png',
+    vibrate: [100, 50, 100],
+    data: { url: './' }
+  };
+
+  event.waitUntil(
+    self.registration.showNotification('Portal 901', options)
+  );
+});
+
+// Clique na notificação abre o site
+self.addEventListener('notificationclick', function(event) {
+  event.notification.close();
+  event.waitUntil(clients.openWindow(event.notification.data.url));
+});
+
