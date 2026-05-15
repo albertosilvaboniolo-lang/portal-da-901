@@ -3,212 +3,872 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portal 901 | Digital Hub</title>
-    
+    <title>Portal 901 | Mural Digital</title>
+
     <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="icon.png">
 
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
-    
+
     <style>
-        body { background-color: #0f172a; color: #ffffff; font-family: system-ui, sans-serif; margin: 0; }
-        .card-glow {
-            background-color: #1e293b; border-radius: 2.5rem; border: 2px solid #3b82f6;
-            box-shadow: 0 0 20px rgba(59, 130, 246, 0.4); transition: all 0.3s ease;
-        }
-        .card-glow:hover { box-shadow: 0 0 35px rgba(59, 130, 246, 0.6); transform: translateY(-5px); }
-        
-        /* BANNER PWA */
-        #pwa-banner {
-            position: fixed; top: 15px; left: 50%; transform: translateX(-50%);
-            width: 90%; max-width: 480px; z-index: 9999;
-            background-color: rgba(30, 41, 59, 0.95); backdrop-filter: blur(12px);
-            padding: 16px; border-radius: 24px; display: flex; align-items: center;
-            justify-content: space-between; gap: 15px; border: 1px solid #3b82f6;
+        :root {
+            --bg: #070b14;
+            --surface: #0d1526;
+            --surface2: #131e35;
+            --border: rgba(255,255,255,0.06);
+            --blue: #3b82f6;
+            --blue-glow: rgba(59,130,246,0.25);
+            --text: #e2e8f0;
+            --muted: #64748b;
+
+            --cat-horario:    #3b82f6;
+            --cat-provas:     #ef4444;
+            --cat-avisos:     #f59e0b;
+            --cat-deveres:    #22c55e;
+            --cat-professores:#a855f7;
+            --cat-custom:     #06b6d4;
         }
 
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        .hidden { display: none !important; }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'DM Sans', sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ── FUNDO ANIMADO ── */
+        body::before {
+            content: '';
+            position: fixed; inset: 0; z-index: 0; pointer-events: none;
+            background:
+                radial-gradient(ellipse 80% 40% at 20% 10%, rgba(59,130,246,0.08) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 50% at 80% 90%, rgba(168,85,247,0.06) 0%, transparent 60%);
+        }
+
+        /* ── TELA DE LOGIN ── */
+        #loginScreen {
+            position: relative; z-index: 1;
+            min-height: 100vh;
+            display: flex; align-items: center; justify-content: center;
+            padding: 24px;
+        }
+        #loginScreen.hidden { display: none !important; }
+        #mainScreen { display: none; }
+        #mainScreen.visible { display: block; }
+
+        .login-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 32px;
+            padding: 48px 36px;
+            width: 100%; max-width: 380px;
+            text-align: center;
+            box-shadow: 0 0 60px rgba(59,130,246,0.12), 0 40px 80px rgba(0,0,0,0.5);
+            position: relative; overflow: hidden;
+        }
+        .login-card::before {
+            content: '';
+            position: absolute; top: 0; left: 0; right: 0; height: 2px;
+            background: linear-gradient(90deg, transparent, var(--blue), transparent);
+        }
+
+        .login-logo {
+            width: 80px; height: 80px;
+            background: linear-gradient(135deg, #1d4ed8, #3b82f6);
+            border-radius: 24px;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 28px;
+            box-shadow: 0 0 30px rgba(59,130,246,0.4);
+            animation: float 3s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%,100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        .login-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 2.4rem; font-weight: 900;
+            letter-spacing: -1px;
+            background: linear-gradient(135deg, #fff 40%, #93c5fd);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+        .login-sub { color: var(--muted); font-size: 0.9rem; margin-bottom: 36px; }
+
+        .btn-primary {
+            width: 100%; padding: 18px;
+            background: linear-gradient(135deg, #2563eb, #3b82f6);
+            color: white; border: none; border-radius: 16px;
+            font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 800;
+            letter-spacing: 1px; text-transform: uppercase;
+            cursor: pointer; transition: all 0.2s;
+            box-shadow: 0 8px 24px rgba(59,130,246,0.35);
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(59,130,246,0.5); }
+        .btn-primary:active { transform: translateY(0); }
+
+        .btn-ghost {
+            background: none; border: none;
+            color: var(--muted); font-size: 0.8rem; letter-spacing: 2px;
+            text-transform: uppercase; cursor: pointer; padding: 12px;
+            transition: color 0.2s; margin-top: 8px;
+        }
+        .btn-ghost:hover { color: var(--text); }
+
+        /* ── NAV ── */
+        nav {
+            position: sticky; top: 0; z-index: 50;
+            background: rgba(7,11,20,0.85);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            padding: 16px 24px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+
+        .nav-left { display: flex; align-items: center; gap: 12px; }
+
+        .status-dot {
+            width: 8px; height: 8px; border-radius: 50%;
+            background: #22c55e;
+            box-shadow: 0 0 8px #22c55e;
+            transition: all 0.3s;
+        }
+        .status-dot.offline { background: #ef4444; box-shadow: 0 0 8px #ef4444; }
+
+        .nav-badge {
+            background: var(--blue); color: white;
+            padding: 4px 12px; border-radius: 8px;
+            font-family: 'Syne', sans-serif; font-weight: 800; font-size: 0.95rem;
+        }
+
+        .nav-title {
+            font-family: 'Syne', sans-serif; font-weight: 800;
+            font-size: 1.2rem; letter-spacing: -0.5px;
+        }
+
+        .admin-badge {
+            background: rgba(245,158,11,0.15); color: #f59e0b;
+            border: 1px solid rgba(245,158,11,0.3);
+            padding: 4px 12px; border-radius: 8px;
+            font-size: 0.7rem; font-weight: 700; letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .btn-logout {
+            width: 40px; height: 40px;
+            background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2);
+            color: #ef4444; border-radius: 12px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s; font-size: 0.95rem;
+        }
+        .btn-logout:hover { background: rgba(239,68,68,0.2); }
+
+        /* ── GRID ── */
+        #mainScreen { position: relative; z-index: 1; }
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+            padding: 28px 24px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        /* ── CARD ── */
+        .card {
+            background: var(--surface);
+            border-radius: 24px;
+            border: 1px solid var(--border);
+            padding: 28px;
+            position: relative; overflow: hidden;
+            transition: transform 0.25s, box-shadow 0.25s;
+        }
+        .card:hover { transform: translateY(-4px); }
+
+        .card::before {
+            content: ''; position: absolute;
+            top: 0; left: 0; right: 0; height: 3px;
+            background: var(--card-color, var(--blue));
+            border-radius: 24px 24px 0 0;
+        }
+
+        .card-header {
+            display: flex; align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .card-icon-wrap {
+            display: flex; align-items: center; gap: 12px;
+        }
+
+        .card-icon {
+            width: 40px; height: 40px; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1rem;
+            background: color-mix(in srgb, var(--card-color, var(--blue)) 15%, transparent);
+            color: var(--card-color, var(--blue));
+        }
+
+        .card-title {
+            font-family: 'Syne', sans-serif;
+            font-weight: 800; font-size: 0.9rem;
+            letter-spacing: 1px; text-transform: uppercase;
+        }
+
+        .card-actions { display: flex; gap: 8px; }
+
+        .btn-icon {
+            width: 32px; height: 32px; border-radius: 8px;
+            border: none; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.8rem; transition: all 0.2s;
+            background: var(--surface2); color: var(--muted);
+        }
+        .btn-icon:hover { color: var(--text); background: var(--border); }
+        .btn-icon.danger:hover { color: #ef4444; background: rgba(239,68,68,0.1); }
+
+        .card-content {
+            font-size: 1rem; line-height: 1.7;
+            color: var(--text); white-space: pre-wrap;
+            min-height: 60px;
+        }
+
+        /* ── BADGE NOVO ── */
+        .new-badge {
+            display: inline-flex; align-items: center; gap: 4px;
+            background: rgba(34,197,94,0.15); color: #22c55e;
+            border: 1px solid rgba(34,197,94,0.3);
+            padding: 2px 8px; border-radius: 6px;
+            font-size: 0.65rem; font-weight: 700; letter-spacing: 1px;
+            text-transform: uppercase; animation: pulse 2s infinite;
+        }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.6} }
+
+        /* ── TIMESTAMP ── */
+        .card-footer {
+            margin-top: 16px; padding-top: 14px;
+            border-top: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .timestamp { color: var(--muted); font-size: 0.75rem; }
+
+        .btn-copy {
+            display: flex; align-items: center; gap: 6px;
+            background: var(--surface2); border: 1px solid var(--border);
+            color: var(--muted); padding: 6px 12px; border-radius: 8px;
+            font-size: 0.75rem; cursor: pointer; transition: all 0.2s;
+        }
+        .btn-copy:hover { color: var(--text); border-color: rgba(255,255,255,0.15); }
+        .btn-copy.copied { color: #22c55e; border-color: rgba(34,197,94,0.3); }
+
+        /* ── COUNTDOWN ── */
+        .countdown-chip {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 6px 12px; border-radius: 10px;
+            font-size: 0.8rem; font-weight: 700;
+            margin-top: 10px;
+        }
+        .countdown-urgent { background: rgba(239,68,68,0.15); color: #ef4444; border: 1px solid rgba(239,68,68,0.3); }
+        .countdown-warn   { background: rgba(245,158,11,0.15); color: #f59e0b; border: 1px solid rgba(245,158,11,0.3); }
+        .countdown-ok     { background: rgba(34,197,94,0.15); color: #22c55e; border: 1px solid rgba(34,197,94,0.3); }
+
+        /* ── EDITOR ADMIN ── */
+        .editor-wrap {
+            margin-top: 16px; padding-top: 16px;
+            border-top: 1px solid var(--border);
+        }
+        textarea.editor-input {
+            width: 100%; padding: 14px;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px; color: var(--text);
+            font-family: 'DM Sans', sans-serif; font-size: 0.9rem;
+            resize: vertical; min-height: 100px; outline: none;
+            transition: border-color 0.2s;
+        }
+        textarea.editor-input:focus { border-color: var(--blue); }
+
+        .btn-save {
+            width: 100%; padding: 12px;
+            background: linear-gradient(135deg, #2563eb, #3b82f6);
+            color: white; border: none; border-radius: 10px;
+            font-family: 'Syne', sans-serif; font-weight: 800;
+            font-size: 0.8rem; letter-spacing: 1px; text-transform: uppercase;
+            cursor: pointer; transition: all 0.2s; margin-top: 10px;
+        }
+        .btn-save:hover { opacity: 0.9; }
+
+        /* ── BOTÃO ADICIONAR BLOCO ── */
+        .add-block-btn {
+            border: 2px dashed rgba(34,197,94,0.3);
+            background: rgba(34,197,94,0.03);
+            color: #22c55e; border-radius: 24px;
+            padding: 28px; width: 100%;
+            font-family: 'Syne', sans-serif; font-weight: 800;
+            font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+            cursor: pointer; transition: all 0.2s;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+        }
+        .add-block-btn:hover {
+            border-color: rgba(34,197,94,0.6);
+            background: rgba(34,197,94,0.08);
+        }
+
+        /* ── MODAL ── */
         .modal-overlay {
-            position: fixed; inset: 0; background-color: rgba(0, 0, 0, 0.9);
-            z-index: 10000; display: none; align-items: center; justify-content: center; padding: 20px;
+            position: fixed; inset: 0; z-index: 1000;
+            background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
+            display: none; align-items: center; justify-content: center; padding: 24px;
+        }
+        .modal-overlay.open { display: flex; }
+
+        .modal-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 28px; padding: 36px;
+            width: 100%; max-width: 420px;
+            text-align: center;
+            box-shadow: 0 40px 80px rgba(0,0,0,0.6);
+        }
+        .modal-title {
+            font-family: 'Syne', sans-serif; font-weight: 900;
+            font-size: 1.4rem; letter-spacing: -0.5px;
+            margin-bottom: 20px;
+        }
+        .modal-text { color: var(--muted); font-size: 0.9rem; line-height: 1.7; text-align: left; }
+        .modal-text b { color: var(--text); }
+
+        /* ── MODAL CRIAR BLOCO ── */
+        .modal-input {
+            width: 100%; padding: 14px 16px;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px; color: var(--text);
+            font-family: 'DM Sans', sans-serif; font-size: 1rem;
+            outline: none; margin-bottom: 12px;
+            transition: border-color 0.2s;
+        }
+        .modal-input:focus { border-color: var(--blue); }
+
+        .icon-grid {
+            display: grid; grid-template-columns: repeat(6,1fr);
+            gap: 8px; margin-bottom: 16px;
+        }
+        .icon-option {
+            aspect-ratio: 1; border-radius: 10px;
+            background: var(--surface2); border: 2px solid transparent;
+            color: var(--muted); cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1rem; transition: all 0.2s;
+        }
+        .icon-option:hover, .icon-option.selected {
+            border-color: var(--blue); color: var(--blue);
+            background: rgba(59,130,246,0.1);
         }
 
-        /* ANIMAÇÃO DE PULSAR (GLOW) */
-        @keyframes pulse-glow {
-            0%, 100% { box-shadow: 0 0 15px rgba(59, 130, 246, 0.4); }
-            50% { box-shadow: 0 0 30px rgba(59, 130, 246, 0.7); }
+        /* ── BANNER PWA ── */
+        #pwa-banner {
+            position: fixed; top: 16px; left: 50%; transform: translateX(-50%);
+            width: calc(100% - 32px); max-width: 480px; z-index: 999;
+            background: rgba(13,21,38,0.95); backdrop-filter: blur(16px);
+            border: 1px solid var(--border);
+            border-radius: 20px; padding: 16px 20px;
+            display: flex; align-items: center; justify-content: space-between; gap: 16px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
         }
-        .animate-glow { animation: pulse-glow 3s infinite; }
+        .pwa-icon {
+            width: 44px; height: 44px; min-width: 44px;
+            background: linear-gradient(135deg, #1d4ed8, #3b82f6);
+            border-radius: 12px; display: flex; align-items: center; justify-content: center;
+            font-size: 1.1rem; color: white;
+        }
+        .pwa-title { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 0.9rem; }
+        .pwa-link { color: var(--blue); font-size: 0.75rem; font-weight: 600; cursor: pointer; }
+
+        /* ── TOAST ── */
+        #toast {
+            position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%) translateY(80px);
+            background: var(--surface2); border: 1px solid var(--border);
+            padding: 12px 20px; border-radius: 12px;
+            font-size: 0.85rem; font-weight: 600;
+            z-index: 2000; transition: transform 0.3s ease;
+            white-space: nowrap;
+        }
+        #toast.show { transform: translateX(-50%) translateY(0); }
+
+        /* ── ADMIN MULTI-SENHA ── */
+        .admin-select-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+            margin-bottom: 16px;
+        }
+        .admin-opt {
+            padding: 14px; border-radius: 12px;
+            background: var(--surface2); border: 2px solid var(--border);
+            cursor: pointer; transition: all 0.2s; text-align: left;
+        }
+        .admin-opt:hover { border-color: var(--blue); }
+        .admin-opt-name { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 0.9rem; }
+        .admin-opt-role { color: var(--muted); font-size: 0.75rem; margin-top: 2px; }
+
+        .loading-skeleton {
+            background: linear-gradient(90deg, var(--surface2) 25%, rgba(255,255,255,0.04) 50%, var(--surface2) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 8px; height: 18px; width: 80%;
+        }
+        @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+        /* ── CHECKBOX LER ── */
+        .mark-read-btn {
+            display: flex; align-items: center; gap: 6px;
+            font-size: 0.75rem; color: var(--muted);
+            cursor: pointer; transition: color 0.2s;
+            background: none; border: none; padding: 0;
+        }
+        .mark-read-btn:hover { color: #22c55e; }
+        .mark-read-btn.done { color: #22c55e; text-decoration: line-through; }
+
+        @media (max-width: 640px) {
+            .grid-container { grid-template-columns: 1fr; padding: 16px; gap: 16px; }
+            nav { padding: 12px 16px; }
+        }
     </style>
 </head>
 <body>
 
-    <div id="pwa-banner" class="hidden">
-        <div class="flex items-center gap-4">
-            <div class="bg-blue-600 h-12 w-12 rounded-2xl flex items-center justify-center animate-glow">
-                <i class="fas fa-book-open text-white"></i>
-            </div>
-            <div>
-                <p class="text-sm font-bold text-white">Portal 901 no Celular</p>
-                <button onclick="document.getElementById('modal-ajuda').style.display='flex'" class="text-xs text-blue-400 font-black uppercase underline">Como Instalar?</button>
-            </div>
-        </div>
-        <button onclick="fecharBannerPWA()" class="text-slate-400 p-2"><i class="fas fa-times"></i></button>
+<!-- ══════════ BANNER PWA ══════════ -->
+<div id="pwa-banner" style="display:none">
+    <div class="pwa-icon"><i class="fas fa-book-open"></i></div>
+    <div style="flex:1">
+        <div class="pwa-title">Portal 901 no Celular</div>
+        <div class="pwa-link" onclick="abrirModalPWA()">Como instalar?</div>
     </div>
+    <button onclick="fecharBannerPWA()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;">
+        <i class="fas fa-times"></i>
+    </button>
+</div>
 
-    <div id="modal-ajuda" class="modal-overlay" onclick="this.style.display='none'">
-        <div class="card-glow p-10 max-w-sm w-full text-center" onclick="event.stopPropagation()">
-            <h3 class="text-2xl font-black mb-6 uppercase italic">Passo a Passo</h3>
-            <div class="text-left space-y-4 text-slate-300">
-                <p>1. Clique no botão <b>Compartilhar</b> ou nos <b>três pontinhos</b>.</p>
-                <p>2. Clique em <b>"Adicionar à Tela de Início"</b>.</p>
-                <p>3. Pronto! O Portal 901 virou um App.</p>
-            </div>
-            <button onclick="document.getElementById('modal-ajuda').style.display='none'" class="mt-8 w-full py-5 bg-blue-600 text-white rounded-3xl font-black">ENTENDI!</button>
+<!-- ══════════ MODAL PWA ══════════ -->
+<div id="modal-pwa" class="modal-overlay" onclick="fecharModal('modal-pwa')">
+    <div class="modal-card" onclick="event.stopPropagation()">
+        <div class="modal-title">📲 Instalar como App</div>
+        <div class="modal-text">
+            <p><b>iOS (Safari):</b><br>1. Toque no ícone de Compartilhar.<br>2. Selecione "Adicionar à Tela de Início".</p>
+            <br>
+            <p><b>Android (Chrome):</b><br>1. Toque nos três pontinhos.<br>2. Selecione "Adicionar à tela inicial".</p>
         </div>
+        <button class="btn-primary" style="margin-top:24px" onclick="fecharModal('modal-pwa')">Entendi!</button>
     </div>
+</div>
 
-    <div id="loginScreen" class="min-h-screen flex items-center justify-center p-6 bg-slate-950">
-        <div class="card-glow p-12 w-full max-w-sm text-center">
-            <i class="fas fa-book-open text-blue-500 text-8xl mb-8 animate-bounce"></i>
-            <h2 class="text-4xl font-black mb-12 uppercase italic tracking-tighter text-white">Portal 901</h2>
-            <button onclick="fazerLogin('aluno')" class="w-full py-6 bg-blue-600 text-white rounded-[2rem] font-black text-xl mb-4 animate-glow">Acesso Aluno</button>
-            <button onclick="pedirSenhaAdmin()" class="w-full py-3 text-slate-500 font-bold text-xs uppercase tracking-widest">Área Admin</button>
+<!-- ══════════ MODAL CRIAR BLOCO ══════════ -->
+<div id="modal-criar" class="modal-overlay" onclick="fecharModal('modal-criar')">
+    <div class="modal-card" onclick="event.stopPropagation()">
+        <div class="modal-title">✦ Novo Bloco</div>
+        <input id="input-novo-nome" class="modal-input" placeholder="Nome do bloco (ex: Recados)">
+        <p style="font-size:0.75rem;color:var(--muted);text-align:left;margin-bottom:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;">Escolha um ícone</p>
+        <div class="icon-grid" id="icon-grid"></div>
+        <button class="btn-primary" onclick="confirmarNovaCategoria()">Criar Bloco</button>
+    </div>
+</div>
+
+<!-- ══════════ MODAL ADMIN ══════════ -->
+<div id="modal-admin" class="modal-overlay" onclick="fecharModal('modal-admin')">
+    <div class="modal-card" onclick="event.stopPropagation()">
+        <div class="modal-title">🔐 Área Admin</div>
+        <p style="color:var(--muted);font-size:0.85rem;margin-bottom:20px">Quem está acessando?</p>
+        <div class="admin-select-grid" id="admin-select-grid"></div>
+        <input id="input-senha-admin" class="modal-input" type="password" placeholder="Senha" onkeydown="if(event.key==='Enter')confirmarAdmin()">
+        <button class="btn-primary" onclick="confirmarAdmin()">Entrar</button>
+        <button class="btn-ghost" onclick="fecharModal('modal-admin')">Cancelar</button>
+    </div>
+</div>
+
+<!-- ══════════ TOAST ══════════ -->
+<div id="toast"></div>
+
+<!-- ══════════ LOGIN ══════════ -->
+<div id="loginScreen">
+    <div class="login-card">
+        <div class="login-logo"><i class="fas fa-book-open" style="font-size:1.8rem;color:white"></i></div>
+        <h1 class="login-title">Portal 901</h1>
+        <p class="login-sub">Mural Digital da Turma</p>
+        <button class="btn-primary" onclick="fazerLogin('aluno')">
+            <i class="fas fa-user" style="margin-right:8px"></i> Acesso Aluno
+        </button>
+        <br>
+        <button class="btn-ghost" onclick="abrirModalAdmin()">Área Admin</button>
+    </div>
+</div>
+
+<!-- ══════════ MAIN ══════════ -->
+<div id="mainScreen">
+
+    <nav>
+        <div class="nav-left">
+            <div id="status-conexao" class="status-dot"></div>
+            <span class="nav-badge">901</span>
+            <span class="nav-title">Mural Digital</span>
+            <span id="admin-badge" class="admin-badge" style="display:none">Admin</span>
         </div>
-    </div>
-
-    <div id="mainScreen" class="hidden min-h-screen">
-        <nav class="sticky top-0 z-50 bg-slate-900/90 backdrop-blur-xl border-b border-blue-900/50 p-6 flex justify-between items-center">
-            <div class="flex items-center gap-4">
-                <div id="status-conexao" class="w-3 h-3 rounded-full bg-green-500 shadow-[0_0_10px_#22c55e]"></div>
-                <span class="bg-blue-600 text-white px-3 py-1 rounded-lg font-black">901</span>
-                <h1 class="text-2xl font-black uppercase italic">Mural Digital</h1>
-            </div>
-            <button onclick="location.reload()" class="h-12 w-12 text-red-500 border border-red-500/30 rounded-2xl"><i class="fas fa-power-off"></i></button>
-        </nav>
-
-        <div id="container-admin-add" class="hidden px-6 pt-10 max-w-6xl mx-auto w-full">
-            <button onclick="criarNovaCategoria()" class="w-full py-6 bg-green-600/10 border-2 border-dashed border-green-500 text-green-500 rounded-[2.5rem] font-black uppercase flex items-center justify-center gap-3">
-                <i class="fas fa-plus-circle text-xl"></i> ADICIONAR NOVO BLOCO
+        <div style="display:flex;gap:8px">
+            <button id="btn-add-bloco" style="display:none;padding:0 14px;gap:6px;font-size:0.75rem;color:#22c55e;border-color:rgba(34,197,94,0.3)" class="btn-icon" onclick="abrirModalCriar()">
+                <i class="fas fa-plus"></i> Bloco
+            </button>
+            <button class="btn-logout" onclick="location.reload()" title="Sair">
+                <i class="fas fa-power-off"></i>
             </button>
         </div>
+    </nav>
 
-        <main class="container mx-auto px-6 py-10 grid grid-cols-1 md:grid-cols-2 gap-10 max-w-6xl" id="mural-container"></main>
-    </div>
+    <div class="grid-container" id="mural-container"></div>
 
-    <script>
-        // FIREBASE CONFIG
-        const firebaseConfig = { databaseURL: "https://project-646369015746153540-default-rtdb.firebaseio.com" };
-        firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
-        let usuarioEhAdmin = false;
+</div>
 
-        // REGISTRO DO SW E NOTIFICAÇÃO
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js').then(reg => {
-                console.log('SW ativo');
-                // Pede permissão para notificações
-                if (Notification.permission === "default") {
-                    Notification.requestPermission();
+<script>
+/* ══════════════════════════════════════
+   CONFIG FIREBASE
+══════════════════════════════════════ */
+const firebaseConfig = { databaseURL: "https://project-646369015746153540-default-rtdb.firebaseio.com" };
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+let usuarioEhAdmin = false;
+let adminAtual = null;
+let iconeSelecionado = 'fa-star';
+
+// Múltiplos admins
+const ADMINS = [
+    { nome: 'Professor(a)', papel: 'Coordenação', senha: 'esquilo' },
+    { nome: 'Delegado(a)', papel: 'Rep. de Turma',  senha: 'turma901' },
+];
+
+/* ══════════════════════════════════════
+   BLOCOS FIXOS + CORES
+══════════════════════════════════════ */
+const blocosFixos = {
+    'horario':     { nome: 'Horário de Aula',      icon: 'fa-clock',             cor: 'var(--cat-horario)' },
+    'provas':      { nome: 'Datas de Prova',        icon: 'fa-file-signature',    cor: 'var(--cat-provas)' },
+    'avisos':      { nome: 'Avisos Importantes',    icon: 'fa-triangle-exclamation', cor: 'var(--cat-avisos)' },
+    'deveres':     { nome: 'Deveres de Casa',       icon: 'fa-book',              cor: 'var(--cat-deveres)' },
+    'professores': { nome: 'Professores',           icon: 'fa-user-tie',          cor: 'var(--cat-professores)' },
+};
+
+const ICONES_DISPONIVEIS = [
+    'fa-star','fa-bolt','fa-heart','fa-flag','fa-bell','fa-calendar',
+    'fa-pencil','fa-gamepad','fa-music','fa-camera','fa-rocket','fa-trophy',
+];
+
+/* ══════════════════════════════════════
+   SERVICE WORKER
+══════════════════════════════════════ */
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+    if (Notification.permission === "default") Notification.requestPermission();
+}
+
+/* ══════════════════════════════════════
+   MONITOR CONEXÃO
+══════════════════════════════════════ */
+db.ref(".info/connected").on("value", snap => {
+    const dot = document.getElementById('status-conexao');
+    if (!dot) return;
+    if (snap.val()) dot.classList.remove('offline');
+    else dot.classList.add('offline');
+});
+
+/* ══════════════════════════════════════
+   LOGIN
+══════════════════════════════════════ */
+function fazerLogin(tipo, adminInfo = null) {
+    usuarioEhAdmin = (tipo === 'admin');
+    adminAtual = adminInfo;
+    document.getElementById('loginScreen').classList.add('hidden');
+    document.getElementById('mainScreen').classList.add('visible');
+    if (usuarioEhAdmin) {
+        document.getElementById('admin-badge').style.display = 'inline-flex';
+        document.getElementById('btn-add-bloco').style.display = 'flex';
+    }
+    if (!localStorage.getItem('pwa_visto_901')) {
+        document.getElementById('pwa-banner').style.display = 'flex';
+    }
+    carregarMural();
+}
+
+function abrirModalAdmin() {
+    const grid = document.getElementById('admin-select-grid');
+    grid.innerHTML = ADMINS.map((a,i) => `
+        <div class="admin-opt" id="admin-opt-${i}" onclick="selecionarAdmin(${i})">
+            <div class="admin-opt-name">${a.nome}</div>
+            <div class="admin-opt-role">${a.papel}</div>
+        </div>
+    `).join('');
+    window._adminSelecionado = 0;
+    document.getElementById('admin-opt-0').style.borderColor = 'var(--blue)';
+    abrirModal('modal-admin');
+}
+
+function selecionarAdmin(idx) {
+    window._adminSelecionado = idx;
+    document.querySelectorAll('.admin-opt').forEach((el,i) => {
+        el.style.borderColor = (i === idx) ? 'var(--blue)' : 'var(--border)';
+    });
+}
+
+function confirmarAdmin() {
+    const idx = window._adminSelecionado ?? 0;
+    const senha = document.getElementById('input-senha-admin').value;
+    if (senha === ADMINS[idx].senha) {
+        fecharModal('modal-admin');
+        document.getElementById('input-senha-admin').value = '';
+        fazerLogin('admin', ADMINS[idx]);
+    } else {
+        mostrarToast('❌ Senha incorreta');
+    }
+}
+
+/* ══════════════════════════════════════
+   CARREGAR MURAL
+══════════════════════════════════════ */
+function carregarMural() {
+    db.ref('categorias').on('value', snapshot => {
+        const extras = snapshot.val() || {};
+        const todas = { ...blocosFixos, ...extras };
+        const container = document.getElementById('mural-container');
+        container.innerHTML = '';
+
+        Object.keys(todas).forEach(chave => {
+            const cat = todas[chave];
+            const ehFixo = !!blocosFixos[chave];
+            const cor = cat.cor || 'var(--cat-custom)';
+
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.id = 'card-' + chave;
+            card.style.setProperty('--card-color', cor);
+
+            const readKey = `lido_${chave}`;
+            const jaLido = localStorage.getItem(readKey);
+
+            card.innerHTML = `
+                <div class="card-header">
+                    <div class="card-icon-wrap">
+                        <div class="card-icon"><i class="fas ${cat.icon}"></i></div>
+                        <span class="card-title">${cat.nome}</span>
+                    </div>
+                    <div class="card-actions">
+                        ${!jaLido && !ehFixo ? `<span class="new-badge" id="badge-novo-${chave}"><i class="fas fa-circle" style="font-size:6px"></i> Novo</span>` : ''}
+                        ${usuarioEhAdmin && !ehFixo ? `<button class="btn-icon danger" onclick="deletarCategoria('${chave}')" title="Apagar"><i class="fas fa-trash"></i></button>` : ''}
+                    </div>
+                </div>
+
+                <div id="texto-${chave}" class="card-content">
+                    <div class="loading-skeleton" style="margin-bottom:8px"></div>
+                    <div class="loading-skeleton" style="width:60%"></div>
+                </div>
+
+                <div id="countdown-${chave}"></div>
+
+                <div class="card-footer">
+                    <span class="timestamp" id="ts-${chave}"></span>
+                    <div style="display:flex;gap:8px;align-items:center">
+                        <button class="mark-read-btn ${jaLido ? 'done' : ''}" id="readbtn-${chave}" onclick="marcarLido('${chave}')">
+                            <i class="fas ${jaLido ? 'fa-check-circle' : 'fa-circle'}"></i> ${jaLido ? 'Lido' : 'Marcar lido'}
+                        </button>
+                        <button class="btn-copy" id="copybtn-${chave}" onclick="copiarTexto('${chave}')">
+                            <i class="fas fa-copy"></i> Copiar
+                        </button>
+                    </div>
+                </div>
+
+                ${usuarioEhAdmin ? `
+                <div class="editor-wrap">
+                    <textarea class="editor-input" id="input-${chave}" placeholder="Digite o conteúdo..."></textarea>
+                    <button class="btn-save" onclick="salvarAlteracao('${chave}')">
+                        <i class="fas fa-floppy-disk" style="margin-right:6px"></i> Salvar Alteração
+                    </button>
+                </div>` : ''}
+            `;
+            container.appendChild(card);
+
+            // Listener conteúdo
+            db.ref('sala/' + chave).on('value', snap => {
+                const dados = snap.val();
+                const txt = (dados && dados.texto) ? dados.texto : (dados || 'Vazio.');
+                const ts = (dados && dados.timestamp) ? dados.timestamp : null;
+
+                const elTxt = document.getElementById('texto-' + chave);
+                if (elTxt) elTxt.textContent = txt;
+
+                const elInput = document.getElementById('input-' + chave);
+                if (elInput) elInput.value = txt;
+
+                // Timestamp
+                const elTs = document.getElementById('ts-' + chave);
+                if (elTs && ts) {
+                    const diff = Date.now() - ts;
+                    elTs.textContent = formatarTempo(diff);
+                }
+
+                // Countdown para provas
+                if (chave === 'provas' || chave.includes('prova')) {
+                    const match = String(txt).match(/(\d{2}\/\d{2}\/\d{4}|\d{2}\/\d{2})/);
+                    if (match) renderCountdown('countdown-' + chave, match[0]);
                 }
             });
-        }
-
-        // MONITOR DE STATUS
-        database.ref(".info/connected").on("value", (snap) => {
-            const statusDot = document.getElementById('status-conexao');
-            if (snap.val() === true) {
-                if(statusDot) statusDot.className = "w-3 h-3 rounded-full bg-green-500 shadow-[0_0_10px_#22c55e]";
-            } else {
-                if(statusDot) statusDot.className = "w-3 h-3 rounded-full bg-red-500 shadow-[0_0_10px_#ef4444]";
-            }
         });
+    });
+}
 
-        const blocosFixos = {
-            'horario': { nome: 'Horário de Aula', icon: 'fa-clock' },
-            'provas': { nome: 'Data de Prova', icon: 'fa-file-signature' },
-            'avisos': { nome: 'Avisos Importantes', icon: 'fa-triangle-exclamation' },
-            'deveres': { nome: 'Deveres de Casa', icon: 'fa-book' },
-            'professores': { nome: 'Professores', icon: 'fa-user-tie' }
-        };
+/* ══════════════════════════════════════
+   SALVAR COM TIMESTAMP
+══════════════════════════════════════ */
+function salvarAlteracao(id) {
+    const val = document.getElementById('input-' + id).value.trim();
+    if (!val) { mostrarToast('⚠️ Campo vazio!'); return; }
+    db.ref('sala/' + id).set({ texto: val, timestamp: Date.now() }).then(() => {
+        mostrarToast('✅ Atualizado!');
+    });
+}
 
-        function fazerLogin(tipo) {
-            usuarioEhAdmin = (tipo === 'admin');
-            document.getElementById('loginScreen').style.display = 'none';
-            document.getElementById('mainScreen').classList.remove('hidden');
-            if(usuarioEhAdmin) document.getElementById('container-admin-add').classList.remove('hidden');
-            if (!localStorage.getItem('pwa_visto_901')) document.getElementById('pwa-banner').classList.remove('hidden');
-            carregarMural();
-        }
+/* ══════════════════════════════════════
+   CRIAR / DELETAR CATEGORIA
+══════════════════════════════════════ */
+function abrirModalCriar() {
+    // Montar grid de ícones
+    const grid = document.getElementById('icon-grid');
+    iconeSelecionado = 'fa-star';
+    grid.innerHTML = ICONES_DISPONIVEIS.map(ic => `
+        <div class="icon-option ${ic === iconeSelecionado ? 'selected' : ''}" onclick="selecionarIcone('${ic}', this)">
+            <i class="fas ${ic}"></i>
+        </div>
+    `).join('');
+    document.getElementById('input-novo-nome').value = '';
+    abrirModal('modal-criar');
+}
 
-        function pedirSenhaAdmin() {
-            if (prompt("Senha do Admin:") === "esquilo") fazerLogin('admin');
-        }
+function selecionarIcone(ic, el) {
+    iconeSelecionado = ic;
+    document.querySelectorAll('.icon-option').forEach(e => e.classList.remove('selected'));
+    el.classList.add('selected');
+}
 
-        function carregarMural() {
-            database.ref('categorias').on('value', function(snapshot) {
-                let categoriasExtras = snapshot.val() || {};
-                const todasCategorias = { ...blocosFixos, ...categoriasExtras };
-                const muralHtml = document.getElementById('mural-container');
-                muralHtml.innerHTML = '';
+function confirmarNovaCategoria() {
+    const nome = document.getElementById('input-novo-nome').value.trim();
+    if (!nome) { mostrarToast('⚠️ Digite um nome!'); return; }
+    const id = 'custom-' + Date.now();
+    db.ref('categorias/' + id).set({ nome, icon: iconeSelecionado });
+    db.ref('sala/' + id).set({ texto: 'Edite aqui.', timestamp: Date.now() });
+    fecharModal('modal-criar');
+    mostrarToast('✅ Bloco criado!');
+}
 
-                Object.keys(todasCategorias).forEach(function(chave) {
-                    const cat = todasCategorias[chave];
-                    const ehFixo = !!blocosFixos[chave];
+function deletarCategoria(id) {
+    if (!confirm('Apagar este bloco? Isso não pode ser desfeito.')) return;
+    db.ref('categorias/' + id).remove();
+    db.ref('sala/' + id).remove();
+    mostrarToast('🗑️ Bloco removido');
+}
 
-                    muralHtml.innerHTML += `
-                        <div id="card-${chave}" class="card-glow p-8 relative">
-                            ${usuarioEhAdmin && !ehFixo ? `<button onclick="deletarCategoria('${chave}')" class="absolute top-6 right-6 text-red-500/40"><i class="fas fa-trash"></i></button>` : ''}
-                            <div class="flex items-center gap-4 mb-6">
-                                <i class="fas ${cat.icon} text-2xl text-blue-400"></i>
-                                <h3 class="font-black uppercase tracking-widest">${cat.nome}</h3>
-                            </div>
-                            <div id="texto-${chave}" class="text-slate-300 border-t border-white/5 pt-6 text-xl min-h-[80px] whitespace-pre-wrap">Carregando...</div>
-                            <div id="editor-${chave}" class="${usuarioEhAdmin ? 'block' : 'hidden'} mt-6">
-                                <textarea id="input-${chave}" class="w-full p-4 rounded-2xl bg-slate-900 border border-blue-500/20 text-white h-32 outline-none mb-2 focus:border-blue-500"></textarea>
-                                <button onclick="salvarAlteracao('${chave}')" class="w-full py-4 bg-blue-600 rounded-xl font-black uppercase text-xs">Atualizar</button>
-                            </div>
-                        </div>`;
+/* ══════════════════════════════════════
+   COPIAR TEXTO
+══════════════════════════════════════ */
+function copiarTexto(id) {
+    const txt = document.getElementById('texto-' + id)?.textContent || '';
+    navigator.clipboard.writeText(txt).then(() => {
+        const btn = document.getElementById('copybtn-' + id);
+        btn.classList.add('copied');
+        btn.innerHTML = '<i class="fas fa-check"></i> Copiado!';
+        setTimeout(() => {
+            btn.classList.remove('copied');
+            btn.innerHTML = '<i class="fas fa-copy"></i> Copiar';
+        }, 2000);
+    });
+}
 
-                    database.ref('sala/' + chave).on('value', function(snapTexto) {
-                        const txt = snapTexto.val() || "Vazio.";
-                        if(document.getElementById('texto-' + chave)) document.getElementById('texto-' + chave).innerText = txt;
-                        if(usuarioEhAdmin && document.getElementById('input-' + chave)) document.getElementById('input-' + chave).value = txt;
-                    });
-                });
-            });
-        }
+/* ══════════════════════════════════════
+   MARCAR COMO LIDO
+══════════════════════════════════════ */
+function marcarLido(id) {
+    const readKey = `lido_${id}`;
+    const jaLido = localStorage.getItem(readKey);
+    const btn = document.getElementById('readbtn-' + id);
+    const badge = document.getElementById('badge-novo-' + id);
 
-        function salvarAlteracao(id) {
-            const val = document.getElementById('input-' + id).value;
-            database.ref('sala/' + id).set(val).then(() => alert("Atualizado!"));
-        }
+    if (jaLido) {
+        localStorage.removeItem(readKey);
+        btn.classList.remove('done');
+        btn.innerHTML = '<i class="fas fa-circle"></i> Marcar lido';
+    } else {
+        localStorage.setItem(readKey, '1');
+        btn.classList.add('done');
+        btn.innerHTML = '<i class="fas fa-check-circle"></i> Lido';
+        if (badge) badge.remove();
+    }
+}
 
-        function criarNovaCategoria() {
-            const nome = prompt("Nome do novo bloco:");
-            if (nome) {
-                const id = 'custom-' + Date.now();
-                database.ref('categorias/' + id).set({ nome: nome, icon: 'fa-star' });
-                database.ref('sala/' + id).set("Edite aqui.");
-            }
-        }
+/* ══════════════════════════════════════
+   COUNTDOWN
+══════════════════════════════════════ */
+function renderCountdown(elId, dataStr) {
+    const el = document.getElementById(elId);
+    if (!el) return;
+    const partes = dataStr.split('/');
+    let data;
+    if (partes.length === 3) data = new Date(`${partes[2]}-${partes[1]}-${partes[0]}`);
+    else data = new Date(`2025-${partes[1]}-${partes[0]}`);
+    const diff = Math.ceil((data - new Date()) / 86400000);
+    if (isNaN(diff)) return;
+    let cls, txt;
+    if (diff < 0) return;
+    if (diff === 0) { cls = 'countdown-urgent'; txt = '🚨 HOJE!'; }
+    else if (diff <= 3) { cls = 'countdown-urgent'; txt = `⚠️ Faltam ${diff} dia${diff>1?'s':''}`; }
+    else if (diff <= 7) { cls = 'countdown-warn'; txt = `⏰ Faltam ${diff} dias`; }
+    else { cls = 'countdown-ok'; txt = `📅 Faltam ${diff} dias`; }
+    el.innerHTML = `<span class="countdown-chip ${cls}">${txt}</span>`;
+}
 
-        function deletarCategoria(id) {
-            if (confirm("Apagar este bloco?")) {
-                database.ref('categorias/' + id).remove();
-                database.ref('sala/' + id).remove();
-            }
-        }
+/* ══════════════════════════════════════
+   UTILITÁRIOS
+══════════════════════════════════════ */
+function formatarTempo(ms) {
+    const min = Math.floor(ms / 60000);
+    if (min < 1) return 'Agora mesmo';
+    if (min < 60) return `Há ${min} min`;
+    const h = Math.floor(min / 60);
+    if (h < 24) return `Há ${h}h`;
+    const d = Math.floor(h / 24);
+    return `Há ${d} dia${d>1?'s':''}`;
+}
 
-        function fecharBannerPWA() {
-            document.getElementById('pwa-banner').style.display = 'none';
-            localStorage.setItem('pwa_visto_901', 'true');
-        }
-    </script>
+function mostrarToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+function abrirModal(id) { document.getElementById(id).classList.add('open'); }
+function fecharModal(id) { document.getElementById(id).classList.remove('open'); }
+
+function abrirModalPWA() { abrirModal('modal-pwa'); }
+function fecharBannerPWA() {
+    document.getElementById('pwa-banner').style.display = 'none';
+    localStorage.setItem('pwa_visto_901', 'true');
+}
+</script>
 </body>
 </html>
